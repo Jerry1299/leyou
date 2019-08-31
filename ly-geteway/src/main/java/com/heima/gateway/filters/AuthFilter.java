@@ -15,7 +15,7 @@ public class AuthFilter extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return null;
+        return FilterConstants.PRE_TYPE;
     }
 
     @Override
