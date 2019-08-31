@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--在UserMapper.xml中定义根据id查询用户信息的Statement-->
+<mapper namespace="com.heima.item.mapper.BrandMapper">
+    <insert id="insertBrandIdAndCategoryIds">
+        INSERT INTO tb_category_brand (category_id, brand_id)
+        <foreach collection="categoryIds" item="categoryId" separator="," open="VALUES">
+            ( #{categoryId},#{brandId} )
+        </foreach>
+    </insert>
+<!--    通过CategoryId查询BrandList-->
+    <select id="queryBrandsByCateoryId" resultType="com.heima.item.entity.Brand">
+        select b.id,b.name,b.image,b.letter
+        from tb_brand b
+        inner join tb_category_brand cb
+        on b.id = cb.brand_id
+        where cb.category_id = #{id}
+    </select>
+</mapper>

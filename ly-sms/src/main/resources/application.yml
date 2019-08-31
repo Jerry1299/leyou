@@ -1,0 +1,20 @@
+server:
+  port: 8086
+spring:
+  application:
+    admin:sms-service
+  rabbitmq:
+    host: 192.168.148.128
+    username: leyou
+    password: leyou
+    virtual-host: /leyou
+ly:
+  sms:
+    accessKeyID: LTAIVa48TbaY1o3n # 你自己的accessKeyId
+    accessKeySecret: j6VkoB3xHAPPMHh9FzBqio60FVIEgM # 你自己的AccessKeySecret
+    signName: Y商城 # 签名名称
+    verifyCodeTemplate: SMS_173251552 # 模板名称
+    domain: dysmsapi.aliyuncs.com # 域名
+    action: SendSMS # API类型，发送短信
+    version: 2017-05-25 # API版本，固定值
+    regionID: cn-hangzhou # 区域id
