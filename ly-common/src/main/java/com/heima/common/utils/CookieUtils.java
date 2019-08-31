@@ -61,6 +61,14 @@ public final class CookieUtils {
         return new CookieBuilder();
     }
 
+    public static void deleteCookie(String cookieName, String domain,HttpServletResponse response) {
+        Cookie cookie = new Cookie(cookieName, "");
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setDomain(domain);
+        response.addCookie(cookie);
+    }
+
     public static class CookieBuilder {
         private HttpServletRequest request;
         private HttpServletResponse response;

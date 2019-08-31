@@ -136,7 +136,7 @@ public class AuthService {
             redisTemplate.opsForValue().set(id,"",time, TimeUnit.MILLISECONDS);
         }
 //        5.删除cookie
-
+        CookieUtils.deleteCookie(prop.getUser().getCookieName(),prop.getUser().getCookieDomain(),response);
 
     }
 }
