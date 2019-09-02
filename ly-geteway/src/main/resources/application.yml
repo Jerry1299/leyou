@@ -15,6 +15,8 @@ zuul:
     search-service: /search/**
     user-service: /user/**
     auth-service: /auth/**
+    cart-service: /cart/**
+    order-service: /order/**
   sensitive-headers:
 #  host:
 #    connect-timeout-millis: 15000 #HTTP连接超时要比Hystrix的大
