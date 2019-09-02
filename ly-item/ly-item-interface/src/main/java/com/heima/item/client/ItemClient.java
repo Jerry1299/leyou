@@ -3,12 +3,12 @@ package com.heima.item.client;
 import com.heima.common.vo.PageResult;
 import com.heima.item.dto.*;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient("item-service")
 public interface ItemClient {
@@ -94,4 +94,20 @@ public interface ItemClient {
     @GetMapping("/spec/of/category")
     List<SpecGroupDTO> querySpecsByCid(@RequestParam("id") Long id);
 
+
+    /**
+     * 根据SkuIds查询List<Sku>
+     * @param ids
+     * @return
+     */
+    @GetMapping("sku/list")
+    List<SkuDTO> querySkusBySkuIds(@RequestParam("ids") List<Long> ids) ;
+
+    /**
+     * 减库存
+     * @param cartMap
+     * @return
+     */
+    @PutMapping("/stock/minus")
+    void minusStock(@RequestBody Map<Long, Integer> cartMap);
 }

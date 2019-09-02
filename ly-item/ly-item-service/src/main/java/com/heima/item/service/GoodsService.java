@@ -26,6 +26,8 @@ import tk.mybatis.mapper.entity.Example;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -282,5 +284,26 @@ public class GoodsService {
             throw new LyException(ExceptionEnum.GOODS_NOT_FOUND);
         }
         return BeanHelper.copyWithCollection(skus,SkuDTO.class);
+    }
+
+    /**
+     * 减库存
+     * @param cartMap
+     */
+    public void minusStock(Map<Long, Integer> cartMap) {
+
+        try {
+            Set<Map.Entry<Long, Integer>> entries = cartMap.entrySet();
+            for (Map.Entry<Long, Integer> entry : entries) {
+                Long skuId = entry.getKey();
+                Integer num = entry.getValue();
+                int count = skuMapper.minusStock(skuId, num);
+                if (count != 1) {
+                    throw new RuntimeException("库存不足");
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException("库存不足");
+        }
     }
 }

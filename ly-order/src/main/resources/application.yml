@@ -18,3 +18,7 @@ mybatis:
   type-aliases-package: com.heima.order.entity
   configuration:
     map-underscore-to-camel-case: true
+ly:
+  worker:
+    workerId: 1
+    dataCenterId: 1
