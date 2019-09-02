@@ -271,4 +271,16 @@ public class GoodsService {
     }
 
 
+    /**
+     * 根据SkuIds查询Skus
+     * @param ids
+     * @return
+     */
+    public List<SkuDTO> querySkusBySkuIds(List<Long> ids) {
+        List<Sku> skus = skuMapper.selectByIdList(ids);
+        if (CollectionUtils.isEmpty(skus)) {
+            throw new LyException(ExceptionEnum.GOODS_NOT_FOUND);
+        }
+        return BeanHelper.copyWithCollection(skus,SkuDTO.class);
+    }
 }

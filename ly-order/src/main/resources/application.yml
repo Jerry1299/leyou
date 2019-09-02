@@ -1,0 +1,20 @@
+server:
+  port: 8089
+spring:
+  application:
+    admin: order-service
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/leyou
+    username: root
+    password: root
+    driver-class-name: com.mysql.jdbc.Driver
+  jackson:
+    default-property-inclusion: non_null
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:10086/eureka
+mybatis:
+  type-aliases-package: com.heima.order.entity
+  configuration:
+    map-underscore-to-camel-case: true

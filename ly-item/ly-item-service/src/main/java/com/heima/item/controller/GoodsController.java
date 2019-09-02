@@ -38,10 +38,10 @@ public class GoodsController {
      * 返回值:PageRult<SpuDTO>
      */
     @GetMapping("spu/page")
-    public ResponseEntity<PageResult<SpuDTO>> getSpuPage(@RequestParam(value = "key",required = false) String key
-            , @RequestParam(value = "saleable",defaultValue = "5") Boolean saleable
-            , @RequestParam(value = "page",defaultValue = "1") Integer page
-            , @RequestParam(value = "rows",required = false) Integer rows) {
+    public ResponseEntity<PageResult<SpuDTO>> getSpuPage(@RequestParam(value = "key", required = false) String key
+            , @RequestParam(value = "saleable", defaultValue = "5") Boolean saleable
+            , @RequestParam(value = "page", defaultValue = "1") Integer page
+            , @RequestParam(value = "rows", required = false) Integer rows) {
 
         return ResponseEntity.ok(goodsService.getSpuPage(key, saleable, page, rows));
 
@@ -81,16 +81,18 @@ public class GoodsController {
 
     /**
      * 根据spuid查询spudetail
+     *
      * @param id
      * @return
      */
     @GetMapping("spu/spudetail")
     public ResponseEntity<SpuDetailDTO> querySpuDetailById(@RequestParam("id") Long id) {
-       return ResponseEntity.ok(goodsService.querySpuDetailById(id));
+        return ResponseEntity.ok(goodsService.querySpuDetailById(id));
     }
 
     /**
      * 根据spuId查询Sku
+     *
      * @param id
      * @return
      */
@@ -102,6 +104,7 @@ public class GoodsController {
 
     /**
      * 根据SpuDTO对象修改Spu
+     *
      * @param spuDTO
      * @return
      */
@@ -112,9 +115,9 @@ public class GoodsController {
     }
 
 
-
     /**
      * 根据spuId查询Spu
+     *
      * @param id
      * @return
      */
@@ -125,12 +128,23 @@ public class GoodsController {
 
     /**
      * 根据spuId查询SpuDetail
+     *
      * @param id
      * @return
      */
     @GetMapping("spu/detail")
     public ResponseEntity<SpuDetailDTO> querySpuDetailBySpuId(@RequestParam("id") Long id) {
         return ResponseEntity.ok(goodsService.querySpuDetailById(id));
+    }
+
+    /**
+     * 根据SkuIds查询List<Sku>
+     * @param ids
+     * @return
+     */
+    @GetMapping("sku/list")
+    public ResponseEntity<List<SkuDTO>> querySkusBySkuIds(@RequestParam("ids") List<Long> ids) {
+        return ResponseEntity.ok(goodsService.querySkusBySkuIds(ids));
     }
 
 
