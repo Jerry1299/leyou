@@ -2,7 +2,7 @@ server:
   port: 8089
 spring:
   application:
-    admin: order-service
+    name: order-service
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/leyou
     username: root
@@ -10,10 +10,15 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
   jackson:
     default-property-inclusion: non_null
+  redis:
+    host: 192.168.148.128
 eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:10086/eureka
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
 mybatis:
   type-aliases-package: com.heima.order.entity
   configuration:
@@ -22,3 +27,11 @@ ly:
   worker:
     workerId: 1
     dataCenterId: 1
+  pay:
+    wx:
+      appID: wx8397f8696b538317
+      mchID: 1473426802
+      key: T6m9iK73b0kn9g5v426MKfHQH7X8rKwb
+      notifyUrl: http://9egzjb.natappfree.cc/api/pay/wxpay/notify
+      spbillCreateIp: 123.12.12.123
+      tradeType: NATIVE

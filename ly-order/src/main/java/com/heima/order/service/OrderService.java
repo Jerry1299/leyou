@@ -16,15 +16,25 @@ import com.heima.order.enums.OrderStatusEnum;
 import com.heima.order.mapper.OrderDetailMapper;
 import com.heima.order.mapper.OrderLogisticMapper;
 import com.heima.order.mapper.OrderMapper;
+import com.heima.order.utils.PayHelper;
+import com.heima.order.vo.OrderDetailVO;
+import com.heima.order.vo.OrderLogisticsVO;
+import com.heima.order.vo.OrderVO;
 import com.heima.user.client.UserClient;
 import com.heima.user.dto.AddressDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -34,6 +44,7 @@ import java.util.stream.Collectors;
  * @Created by YJF
  */
 @Service
+@Slf4j
 public class OrderService {
 
     @Autowired
@@ -101,16 +112,17 @@ public class OrderService {
 //        3.保存用户信息
 //        获取用户id
         Long userId = UserHolder.getUser().getId();
+        order.setUserId(userId);
 //        4.保存订单状态
         order.setStatus(OrderStatusEnum.INIT.value());
 //        将订单保存到数据库
-        int count = orderMapper.insert(order);
+        int count = orderMapper.insertSelective(order);
         if (count != 1) {
             throw new LyException(ExceptionEnum.INSERT_OPERATION_FAIL);
         }
 //        将订单详情保存到数据库
         count = orderDetailMapper.insertList(orderDetails);
-        if (count !=1) {
+        if (count != orderDetails.size() ) {
             throw new LyException(ExceptionEnum.INSERT_OPERATION_FAIL);
         }
 
@@ -120,7 +132,7 @@ public class OrderService {
         OrderLogistics orderLogistics = BeanHelper.copyProperties(addressDTO, OrderLogistics.class);
         orderLogistics.setOrderId(orderId);
 //        将订单地址保存到数据库中
-        count = orderLogisticMapper.insert(orderLogistics);
+        count = orderLogisticMapper.insertSelective(orderLogistics);
         if (count != 1) {
             throw new LyException(ExceptionEnum.INSERT_OPERATION_FAIL);
         }
@@ -130,5 +142,119 @@ public class OrderService {
 
 
         return orderId;
+    }
+
+    /**
+     * 根据OrderId查询Order
+     * @param orderId
+     * @return
+     */
+    public OrderVO queryOrderById(Long orderId) {
+
+
+//        查询Order数据
+        Order order = orderMapper.selectByPrimaryKey(orderId);
+        if (order == null) {
+            throw new LyException(ExceptionEnum.ORDER_NOT_FOUND);
+        }
+//        查询OrderDetail数据
+        OrderDetail orderDetail = new OrderDetail();
+        orderDetail.setOrderId(orderId);
+        List<OrderDetail> orderDetails = orderDetailMapper.select(orderDetail);
+        if (CollectionUtils.isEmpty(orderDetails)) {
+            throw new LyException(ExceptionEnum.ORDER_NOT_FOUND);
+        }
+//        查询OrderLogists数据
+        OrderLogistics orderLogistics = new OrderLogistics();
+        orderLogistics.setOrderId(orderId);
+        OrderLogistics orderLogistics1 = orderLogisticMapper.selectOne(orderLogistics);
+        if (orderLogistics1 == null) {
+            throw new LyException(ExceptionEnum.ORDER_NOT_FOUND);
+        }
+
+        OrderVO orderVO = BeanHelper.copyProperties(order, OrderVO.class);
+        List<OrderDetailVO> orderDetailVos = BeanHelper.copyWithCollection(orderDetails, OrderDetailVO.class);
+        OrderLogisticsVO orderLogisticsVO = BeanHelper.copyProperties(orderLogistics1, OrderLogisticsVO.class);
+
+        orderVO.setDetailList(orderDetailVos);
+        orderVO.setLogistics(orderLogisticsVO);
+
+        return orderVO;
+    }
+
+    @Autowired
+    private PayHelper payHelper;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    /**
+     * 根据OrderId获取支付链接
+     * @param orderId
+     * @return
+     */
+    public String createPayUrl(Long orderId) {
+        String url = payHelper.createOrder(orderId, 1L, "喜提玛莎拉蒂");
+        redisTemplate.opsForValue().set(orderId.toString(), url, 2, TimeUnit.HOURS);
+        return url;
+    }
+
+    /**
+     * 更改订单状态
+     * @param result
+     */
+    @Transactional
+    public void handleNotify(Map<String, String> result) {
+
+//        1.校验签名
+        try {
+            payHelper.isValidSign(result);
+        } catch (Exception e) {
+            log.error("[微信支付]签名校验有误,result:{}", result, e);
+            throw new LyException(ExceptionEnum.INVALID_NOTIFY_SIGN, e);
+        }
+//        2.校验支付业务是否成功
+        payHelper.checkResultCode(result);
+//        3.校验金额是否一致
+        String total_feeStr = result.get("total_fee");
+        String orderIdStr = result.get("out_trade_no");
+        if (StringUtils.isEmpty(total_feeStr) || StringUtils.isEmpty(orderIdStr)) {
+            throw new LyException(ExceptionEnum.INVALID_NOTIFY_PARAM);
+        }
+
+//        金额不符,抛异常
+        Long total_fee = Long.valueOf(total_feeStr);
+        Long orderId = Long.valueOf(orderIdStr);
+        if (total_fee != 1L) {
+            throw new LyException(ExceptionEnum.INVALID_NOTIFY_PARAM);
+        }
+
+//        4.修改订单状态
+        Order order = new Order();
+        order.setStatus(OrderStatusEnum.PAY_UP.value());
+        order.setOrderId(orderId);
+        order.setPayTime(new Date());
+        int count = orderMapper.updateByPrimaryKeySelective(order);
+        if (count != 1) {
+            log.error("[微信回调]更新订单状态失败,订单id:{}",orderId);
+            throw new LyException(ExceptionEnum.UPDATE_OPERATION_FAIL);
+        }
+        log.info("[微信回调],订单支付成功!订单编号:{}", orderId);
+    }
+
+    /**
+     * 根据orderId查询订单状态
+     * @param orderId
+     * @return
+     */
+    public Integer queryPayState(Long orderId) {
+
+        Order order = orderMapper.selectByPrimaryKey(orderId);
+        if (order == null) {
+            throw new LyException(ExceptionEnum.ORDER_NOT_FOUND);
+        }
+
+        return order.getStatus();
+
     }
 }

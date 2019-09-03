@@ -16,7 +16,14 @@ zuul:
     user-service: /user/**
     auth-service: /auth/**
     cart-service: /cart/**
-    order-service: /order/**
+    order-service:
+      path: /order/**
+      serviceId: order-service
+      strip-prefix: false
+    pay-service:
+      path: /pay/**
+      serviceId: order-service
+      strip-prefix: false # 不要把前缀去除
   sensitive-headers:
 #  host:
 #    connect-timeout-millis: 15000 #HTTP连接超时要比Hystrix的大
@@ -47,3 +54,4 @@ ly:
       - /api/user/check
       - /api/user/code
       - /api/item
+      - /api/pay
